@@ -155,3 +155,6 @@ go.work.sum
 # MacOS files
 .DS_Store
 .localized
+
+# Firebase
+.firebase/
