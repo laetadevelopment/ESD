@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { firestore } from '@/firebase'
 import { collection, addDoc, serverTimestamp, FieldValue } from 'firebase/firestore'
-import { useUserStore } from '@/stores/user'
+import { useNavigationStore } from '@/stores/navigation'
 
 interface Notification {
   id: string
   message: string
   type: 'default' | 'success' | 'error'
-  userId: string | null
+  navigationId: string | null
   createdAt: FieldValue
 }
 
@@ -17,13 +17,13 @@ export const useNotificationStore = defineStore('notifications', {
   }),
   actions: {
     async addNotification(message: string, type: 'default' | 'success' | 'error' = 'default') {
-      const userStore = useUserStore()
-      const userId = userStore.currentUser?.uid || null
+      const navigationStore = useNavigationStore()
+      const navigationId = navigationStore.currentGuestUUID || null
       const newNotification: Notification = {
         id: Date.now().toString(),
         message,
         type,
-        userId,
+        navigationId,
         createdAt: serverTimestamp()
       }
       this.notifications.push(newNotification)
@@ -43,7 +43,8 @@ export const useNotificationStore = defineStore('notifications', {
     clearNotifications() {
       this.notifications = []
     }
-  }
+  },
+  persist: true
 })
 
 export default useNotificationStore

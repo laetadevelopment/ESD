@@ -1,6 +1,6 @@
 {
   "name": "esd",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,8 +16,11 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@types/uuid": "^9.0.8",
     "firebase": "^10.12.2",
     "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.1",
+    "uuid": "^10.0.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },

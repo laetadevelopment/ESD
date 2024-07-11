@@ -22,7 +22,12 @@ async function loginUser() {
   } catch (error: any) {
     if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
       notificationStore.addNotification(
-        "The email or password you entered doesn't match our records. Please double-check your credentials and try again.",
+        "The email or password you entered doesn't match our records. Please double check your credentials and try again.",
+        'error'
+      )
+    } else if (error.code === 'auth/invalid-email') {
+      notificationStore.addNotification(
+        "The email address you entered doesn't look quite right. Please double check and provide a valid email address to proceed with registration.",
         'error'
       )
     } else if (error.code === 'auth/user-disabled') {
@@ -37,14 +42,7 @@ async function loginUser() {
       )
     }
     console.error('Error logging in:', error)
-    // Close the mobile menu
-    closeMobileMenu()
   }
-}
-
-function closeMobileMenu() {
-  // Call the closeMobileMenu function from the App.vue component
-  useRouter().push({ name: 'home' })
 }
 </script>
 

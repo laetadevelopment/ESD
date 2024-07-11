@@ -1,47 +1,110 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useNavigationStore } from '@/stores/navigation'
-const navigationStore = useNavigationStore()
-const currentStep = ref(1)
+import { useProjectStore } from '@/stores/project'
+import { useRouter } from 'vue-router'
+import { useNotificationStore } from '@/stores/notifications'
 import Notifications from '@/components/Notifications.vue'
+import One from '@/components/project/wizard/One.vue'
+import Two from '@/components/project/wizard/Two.vue'
+import Three from '@/components/project/wizard/Three.vue'
 
-import One from '../components/project/wizard/One.vue'
-import Two from '../components/project/wizard/Two.vue'
-import Three from '../components/project/wizard/Three.vue'
-import Four from '../components/project/wizard/Four.vue'
-import Five from '../components/project/wizard/Five.vue'
+const navigationStore = useNavigationStore()
+const projectStore = useProjectStore()
+const router = useRouter()
+const notificationStore = useNotificationStore()
+const currentStep = ref(2)
 
-function wizard(step: string) {
+const emit = defineEmits<{
+  (e: 'updateActiveTab', tab: string): void
+}>()
+
+watch(
+  () => projectStore.currentProject,
+  (project) => {
+    if (project) {
+      currentStep.value = getStepNumber(project.currentWizardStep)
+    }
+  },
+  { immediate: true }
+)
+
+function getStepNumber(step: string): number {
   switch (step) {
-    case 'back':
-      currentStep.value = Math.max(currentStep.value - 1, 1)
-      navigationStore.navigateToStep(currentStep.value)
-      break
+    case 'start':
+      return 2
     case 'one':
-      currentStep.value = 1
-      navigationStore.navigateToStep(currentStep.value)
-      break
+      return 2
     case 'two':
-      currentStep.value = 2
-      navigationStore.navigateToStep(currentStep.value)
-      break
+      return 3
     case 'three':
-      currentStep.value = 3
-      navigationStore.navigateToStep(currentStep.value)
-      break
-    case 'four':
-      currentStep.value = 4
-      navigationStore.navigateToStep(currentStep.value)
-      break
-    case 'five':
-      currentStep.value = 5
-      navigationStore.navigateToStep(currentStep.value)
-      break
-    case 'save':
-      navigationStore.saveProject()
-      break
+      return 4
     default:
-      break
+      return 2
+  }
+}
+
+async function wizard(step: string) {
+  if (projectStore.currentProject) {
+    switch (step) {
+      case 'back':
+        currentStep.value = Math.max(currentStep.value - 1, 2)
+        projectStore.currentProject.currentWizardStep = getStepName(currentStep.value)
+        await projectStore.saveProject()
+        break
+      case 'one':
+        currentStep.value = 2
+        projectStore.currentProject.currentWizardStep = 'one'
+        await projectStore.saveProject()
+        break
+      case 'two':
+        currentStep.value = 3
+        projectStore.currentProject.currentWizardStep = 'two'
+        await projectStore.saveProject()
+        break
+      case 'three':
+        currentStep.value = 4
+        projectStore.currentProject.currentWizardStep = 'three'
+        await projectStore.saveProject()
+        break
+      case 'save':
+        const currentStepName = getStepName(currentStep.value)
+        projectStore.currentProject.currentWizardStep = `save ${currentStepName}`
+        await projectStore.saveProject()
+        emit('updateActiveTab', 'allProjects')
+        router.replace({ path: '/projects', query: { activeTab: 'allProjects' } })
+        notificationStore.addNotification("Project saved successfully!", 'success')
+        break
+      default:
+        break
+    }
+  }
+}
+
+function getStepName(stepNumber: number): string {
+  switch (stepNumber) {
+    case 2:
+      return 'one'
+    case 3:
+      return 'two'
+    case 4:
+      return 'three'
+    default:
+      return 'one'
+  }
+}
+
+function updateWizardStep(step: string) {
+  currentStep.value = getStepNumber(step)
+}
+
+async function handleWizardComplete() {
+  if (projectStore.currentProject) {
+    projectStore.currentProject.currentWizardStep = 'complete'
+    await projectStore.saveProject()
+    emit('updateActiveTab', 'allProjects')
+    router.replace({ path: '/projects', query: { activeTab: 'allProjects' } })
+    notificationStore.addNotification("New project created successfully!", 'success')
   }
 }
 </script>
@@ -53,23 +116,19 @@ function wizard(step: string) {
     </div>
     <Notifications />
     <div class="content-body">
-      <div class="wizard-steps">
-        <One v-if="currentStep === 1" />
-        <Two v-if="currentStep === 2" />
-        <Three v-if="currentStep === 3" />
-        <Four v-if="currentStep === 4" />
-        <Five v-if="currentStep === 5" />
-      </div>
       <div class="wizard-nav">
         <nav>
           <a href="#" @click.prevent="wizard('back')" title="Back">Back</a>
           <a href="#" @click.prevent="wizard('one')" title="One">One</a>
           <a href="#" @click.prevent="wizard('two')" title="Two">Two</a>
           <a href="#" @click.prevent="wizard('three')" title="Three">Three</a>
-          <a href="#" @click.prevent="wizard('four')" title="Four">Four</a>
-          <a href="#" @click.prevent="wizard('five')" title="Five">Five</a>
           <a href="#" @click.prevent="wizard('save')" title="Save">Save</a>
         </nav>
+      </div>
+      <div class="wizard-steps">
+        <One v-if="currentStep === 2" @updateWizardStep="updateWizardStep" />
+        <Two v-if="currentStep === 3" @updateWizardStep="updateWizardStep" />
+        <Three v-if="currentStep === 4" @wizardComplete="handleWizardComplete" />
       </div>
     </div>
   </div>
@@ -84,31 +143,17 @@ function wizard(step: string) {
   height: 100%;
   width: 100%;
 }
-.content-body {
-  overflow: hidden;
-}
-.wizard-steps {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  box-sizing: border-box;
-  height: calc(100% - 55px);
-  width: 100%;
-  overflow-y: scroll;
-}
-.wizard-step {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.new-project-wizard .content-body {
+  border-top: none;
 }
 .wizard-nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
   box-sizing: border-box;
   width: 100%;
+  height: 55px;
+  background: rgba(57,116,203,1);
 }
 .wizard-nav nav {
   display: flex;
@@ -116,13 +161,46 @@ function wizard(step: string) {
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  height: 55px;
-  background: rgba(57,116,203,1);
+  height: 100%;
 }
 .wizard-nav nav a {
   color: rgba(255,255,255,1);
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 10px;
+  text-transform: uppercase;
 }
 .wizard-nav nav a:hover {
   color: rgba(255,255,255,.75);
+}
+.wizard-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 25px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+@media (max-width: 1125px) {
+  .wizard-nav nav a {
+    font-size: 16px;
+  }
+}
+@media (max-width: 500px) {
+  .wizard-nav nav a {
+    font-size: 14px;
+  }
 }
 </style>

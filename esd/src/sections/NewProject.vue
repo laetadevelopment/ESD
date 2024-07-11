@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { defineEmits } from 'vue'
 import Notifications from '@/components/Notifications.vue'
+import { useProjectStore } from '@/stores/project'
+import { useUserStore } from '@/stores/user'
 
 const emit = defineEmits<{
   (e: 'startWizard'): void
 }>()
 
-function wizard() {
+const projectStore = useProjectStore()
+const userStore = useUserStore()
+
+async function startNewProject() {
+  await projectStore.createProject()
   emit('startWizard')
 }
 </script>
@@ -18,8 +24,8 @@ function wizard() {
     </div>
     <Notifications />
     <div class="content-body">
-      <div class="logged-in">
-        <img @click="wizard" alt="Start New Project" src="@/assets/start.svg" width="300" />
+      <div v-if="userStore.currentUser" class="start-wizard">
+        <img @click="startNewProject" alt="Start New Project" src="@/assets/start.svg" width="300" />
       </div>
       <p>Starting a new electrical blueprint analysis project in ESD is quick and easy, thanks to our intuitive New Project Wizard. Whether you're working on a small residential job or a large commercial complex, the New Project section of your Dashboard guides you through the process of setting up your project for success.</p>
       <p>To create a new project, simply click the "Start" icon above after you have created a new user account and logged in. This will open the New Project Wizard, which consists of the following steps:</p>
@@ -74,11 +80,19 @@ function wizard() {
 .content-body {
   padding: 25px;
 }
-.content-body .logged-in {
+.start-wizard {
   display: flex;
   justify-content: center;
 }
-.content-body img {
+.start-wizard img {
   cursor: pointer;
+}
+.start-wizard img:hover {
+  animation: bounce .5s 2 ease-in;
+}
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
 }
 </style>

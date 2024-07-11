@@ -4,6 +4,7 @@ import ContentNotifications from '@/components/Notifications.vue'
 import RecentProjects from '../sections/RecentProjects.vue'
 import UsageStatistics from '../sections/UsageStatistics.vue'
 import AccountOverview from '../sections/AccountOverview.vue'
+import Notifications from '../sections/Notifications.vue'
 
 const props = defineProps<{
   activeTab: string

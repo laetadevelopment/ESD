@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 import { useNotificationStore } from '@/stores/notifications'
 import Notifications from '@/components/Notifications.vue'
 
+const name = ref('')
 const email = ref('')
 const password = ref('')
 const userStore = useUserStore()
@@ -14,9 +15,9 @@ const emit = defineEmits<{
 
 async function createUser() {
   try {
-    await userStore.register(email.value, password.value)
+    await userStore.register(name.value, email.value, password.value)
     notificationStore.addNotification(
-      "Welcome to ESD! Your account has been created successfully. You can now log in and start using our powerful features to revolutionize your electrical blueprint analysis workflow.",
+      "Your account has been created successfully. Please log in below to access your ESD dashboard.",
       'success'
     )
     emit('updateActiveTab', 'login')
@@ -33,7 +34,7 @@ async function createUser() {
       )
     } else if (error.code === 'auth/invalid-email') {
       notificationStore.addNotification(
-        "The email address you entered doesn't look quite right. Please double-check and provide a valid email address to proceed with registration.",
+        "The email address you entered doesn't look quite right. Please double check and provide a valid email address to proceed with registration.",
         'error'
       )
     } else {
@@ -55,6 +56,10 @@ async function createUser() {
     <Notifications />
     <div class="content-body">
       <form @submit.prevent="createUser">
+        <div class="user-name">
+          <label>Name:</label>
+          <input type="text" v-model="name" required>
+        </div>
         <div class="user-email">
           <label>Email:</label>
           <input type="email" v-model="email" required>

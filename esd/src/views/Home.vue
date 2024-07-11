@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits } from 'vue'
 import Introduction from '../sections/Introduction.vue'
 import KeyFeatures from '../sections/KeyFeatures.vue'
 import Testimonials from '../sections/Testimonials.vue'
@@ -36,6 +36,6 @@ function freeTrial() {
   <Introduction :activeTab="props.activeTab" v-if="props.activeTab === 'introduction'" @freeTrial="freeTrial" />
   <KeyFeatures :activeTab="props.activeTab" v-if="props.activeTab === 'keyFeatures'" />
   <Testimonials :activeTab="props.activeTab" v-if="props.activeTab === 'testimonials'" />
-  <NewUsers :activeTab="props.activeTab" v-if="props.activeTab === 'newUsers'" />
-  <Login :activeTab="props.activeTab" v-if="props.activeTab === 'login'" />
+  <NewUsers :activeTab="props.activeTab" v-if="props.activeTab === 'newUsers'" @updateActiveTab="updateActiveTab" />
+  <Login :activeTab="props.activeTab" v-if="props.activeTab === 'login'" @updateActiveTab="updateActiveTab" />
 </template>
